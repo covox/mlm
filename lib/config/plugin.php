@@ -4,7 +4,7 @@ return array (
     'icon' => 'img/mlm.gif',
     'img' => 'img/mlm.gif',
     'version' => '1.0.0',
-    'vendor' => '964801',
+    'vendor' => 964801,
     'shop_settings' => true,
     'handlers' =>
         array (

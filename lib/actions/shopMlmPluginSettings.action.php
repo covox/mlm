@@ -26,8 +26,10 @@ class shopMlmPluginSettingsAction extends waViewAction
         }
         unset($template);
 
-
         $this->view->assign('settings', $settings);
         $this->view->assign('templates', $templates);
     }
+
 }
+
+

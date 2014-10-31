@@ -5,7 +5,7 @@ class shopMlmPlugin extends shopPlugin
     public function backendSettingsAffiliate()
     {
         return array(
-            'id' => 'Mlm',
+            'id' => 'mlm',
             'name' => _wp('MLM program'),
             'url' => '?plugin=mlm&module=affiliate&action=settings'
         );

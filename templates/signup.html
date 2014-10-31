@@ -5,8 +5,10 @@
             <p>[`You have successfully signed up.`]</p>
         {else}
             <h1>[`Sign up`]</h1>
-            {$wa->authAdapters()}
-            {$wa->signupForm($errors)}
+            {*$wa->authAdapters()*}
+            {if $wa->shop}
+                {shopMlmPluginViewHelper::getSignupForm($errors)}
+            {/if}
         {/if}
     </div>
 </div>
