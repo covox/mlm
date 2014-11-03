@@ -25,11 +25,17 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
 
     public function execute()
     {
-        $mlm_id = waRequest::get('mlm_id');
-        $storage = new waSessionStorage();
-        $storage->set('mlm_id', $mlm_id);
+        $mlm_id = waRequest::get('mlm_id', 0, 'int');
+        if ($mlm_id > 0) {
+            $storage = new waSessionStorage();
+            $storage->set('mlm_id', $mlm_id);
+            $mlmCustomersModel = new shopMlmCustomersModel();
+            $customer = $mlmCustomersModel->getById($mlm_id);
+            if (!empty($customer)) {
+                $this->view->assign('parent', $mlmCustomersModel->getParent($customer));
+            }
 
-        var_dump($mlm_id);
+        }
 
         $confirm_hash = waRequest::get('confirm', false);
         if (wa()->getAuth()->isAuth() && !$confirm_hash) {
@@ -46,6 +52,7 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
         //$signup_url = wa()->getRouteUrl((isset($auth['app']) ? $auth['app'] : '').'/signup');
         if (wa()->getConfig()->getRequestUrl(false, true) != $signup_url) {
             $this->redirect($signup_url);
+            //http://plugins.snark.itfrogs.ru/shop/mlm/signup/?mlm_id=246425
         }
         $errors = array();
         if (waRequest::method() == 'post') {
@@ -87,7 +94,6 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
         $this->setLayout(new shopFrontendLayout());
         $this->getResponse()->setTitle(_wp('Sign up'));
 
-
     }
 
     /**
@@ -95,15 +101,28 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
      */
     protected function afterSignup(waContact $contact)
     {
-//        exit(12312);
+//var_dump($contact);
+//        exit;
         $plugin = self::getPlugin();
         $settings = $plugin->getSettings();
         $storage = new waSessionStorage();
 
         $mlm_id = $storage->get('mlm_id');
-        $settings['mlm_id'] = $mlm_id;
-        $plugin->saveSettings($settings);
-//        var_dump($mlm_id);
-//        exit;
+        if ($mlm_id > 0 && $settings['enabled'] == 1) {
+            $contact_id = $contact->getId();
+            $mlmCustomersModel = new shopMlmCustomersModel();
+            $customer = $mlmCustomersModel->getByContactId($contact_id);
+
+            if (!$customer) {
+                $customer = array(
+                    'contact_id' => $contact_id
+                );
+
+                $parent_code = $mlm_id;
+                $customer['code'] = $mlmCustomersModel->add($contact_id, $parent_code);
+            }
+        }
+
+
     }
 }

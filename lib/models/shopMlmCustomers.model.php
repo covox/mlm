@@ -42,7 +42,6 @@ class shopMlmCustomersModel extends shopCustomerModel
                 if (!isset($admin_id) && $admin_id < 1) {
                     $admin_id = $this->query('SELECT id FROM wa_contact LIMIT 1')->fetchField();
                 }
-                var_dump($admin_id);
                 $owners = $settings['owners'] = array($admin_id => array('mlmweight' => 100, 'id' => $admin_id));
             }
 
@@ -73,6 +72,11 @@ class shopMlmCustomersModel extends shopCustomerModel
             'create_datetime' => date('Y-m-d H:i:s')
         ));
         return $code;
+    }
+
+    public function getParent($customer) {
+        $contact = new waContact($customer['parent_id']);
+        return $contact->load();
     }
 
     private function getNextOwnerId($owners, $last_owner_id) {

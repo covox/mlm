@@ -60,9 +60,9 @@
                         {foreach $owners as $owner}
                             <li>
                                 <span>{$owner.user.name}&nbsp;</span>
-                                {if $probability}
-                                    <input type="text" class="short numerical probability_field-group" name="owners[{$owner.user.id}][mlmweight]" value="{$owner.mlmweight}">
-                                {/if}
+
+                                    <input type="text" class="short numerical probability_field-group" name="owners[{$owner.user.id}][mlmweight]" value="{$owner.mlmweight}" {if !$probability}style="display:none;" {/if}>
+
                                 <span style="cursor: pointer;" onclick="mlmOwnerDelete(this);">X</span>
                                 <input type="hidden" name="owners[{$owner.user.id}][id]" value="{$owner.user.id}">
                             </li>
@@ -174,11 +174,17 @@
             minLength: 2,
             dataType: 'json',
             select: function( event, ui ) {
+                if (mlmProbability == 0) {
+                    var style = ' style="display:none;" ';
+                }
+                else {
+                    var style = ' style="display:inline-block;" ';
+                }
                 var li = '<li>' +
                         '<span>' +
                         ui.item.data.name +
                         '&nbsp;</span>' +
-                        '<input type="text" class="short numerical probability_field-group" name="owners[' + ui.item.id + '][mlmweight]" value="">' +
+                        '<input type="text" class="short numerical probability_field-group" name="owners[' + ui.item.id + '][mlmweight]" value="" '+ style +' >' +
                         '<span style="cursor: pointer;" onclick="mlmOwnerDelete(this);">' +
                         'X' +
                         '</span>' +

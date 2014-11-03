@@ -201,7 +201,7 @@ class shopMlmPlugin extends shopPlugin
                 'contact_id' => $contact_id
             );
 
-            $parent_code = waRequest::get('mlm_code', 0, 'int');
+            $parent_code = waRequest::get('mlm_id', 0, 'int');
             $customer['code'] = $mlmCustomersModel->add($contact_id, $parent_code);
         }
 
@@ -217,6 +217,7 @@ class shopMlmPlugin extends shopPlugin
             $view->assign('date_format', $format);
             $view->assign('activity', $this->getSettings('activity'));
         }
+        $view->assign('parent', $mlmCustomersModel->getParent($customer));
         $view->assign('promo', $this->getSettings('promo'));
         return $view->fetch($this->path . '/templates/frontendMyAffiliate.html');
     }
