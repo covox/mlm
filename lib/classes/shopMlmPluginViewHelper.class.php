@@ -8,14 +8,27 @@
 
 class shopMlmPluginViewHelper extends waViewHelper
 {
+    /**
+     * @var shopMlmPlugin $plugin
+     */
+    private static $plugin;
+
+    private static function getPlugin()
+    {
+        if (!empty(self::$plugin)) {
+            $plugin = self::$plugin;
+        } else {
+            $plugin = wa()->getPlugin('mlm');
+        }
+        return $plugin;
+    }
 
     public static function getSignupForm($errors = array()) {
-        $viewHelper = new waViewHelper(waSystem::getInstance()->getView());
-        return $viewHelper->signupForm($errors);
+       $plugin = self::getPlugin();
+        return $plugin->signupForm($errors);
     }
 
-    public function signupUrl($absolute = false)
-    {
-        return $shopUrl = wa()->getRouteUrl('shop/frontend') . '/mlm/signup/';
-    }
+
+
+
 }

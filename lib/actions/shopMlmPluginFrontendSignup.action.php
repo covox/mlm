@@ -95,7 +95,7 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
      */
     protected function afterSignup(waContact $contact)
     {
-        exit(12312);
+//        exit(12312);
         $plugin = self::getPlugin();
         $settings = $plugin->getSettings();
         $storage = new waSessionStorage();

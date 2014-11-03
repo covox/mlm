@@ -9,6 +9,7 @@ return array (
     'handlers' =>
         array (
             'backend_settings_affiliate' => 'backendSettingsAffiliate',
+            'frontend_my_affiliate' => 'frontendMyAffiliate',
         ),
     'frontend' => true,
 );
