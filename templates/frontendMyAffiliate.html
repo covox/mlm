@@ -14,7 +14,15 @@
     {*$subtree|var_dump*}
     </pre>
 
-    {wa_print_tree tree=$subtree unfolded=true collapsible_class='collapsible' class="menu-v category-tree" elem ='<a href="#" title=":name">:name</a>'}
+    <div id="mlmCustomersTree">
+        <ul>
+            <li class="jstree-open">{$contact.name}
+                {wa_print_tree tree=$subtree unfolded=true collapsible_class='jstree-open' class="menu-v customers-tree" elem ='---<a href="#" title=":name">:name</a>'}
+            </li>
+        </ul>
+
+    </div>
+
 {else}
 
     <!-- not a referall partner yet -->
@@ -29,3 +37,13 @@
     </form>
 
 {/if}
+
+<script>
+    $(function () {
+        $('#mlmCustomersTree').jstree();
+
+        $('#mlmCustomersTree').on("changed.jstree", function (e, data) {
+            console.log(data.selected);
+        });
+    });
+</script>

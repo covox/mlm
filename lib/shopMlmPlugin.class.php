@@ -205,8 +205,11 @@ class shopMlmPlugin extends shopPlugin
             return;
         }
         $view = self::getView();
+        $this->addJs('js/jstree/jstree.min.js');
+        $this->addCss('js/jstree/themes/default/style.min.css');
 
-        $contact_id = wa()->getUser()->getId();
+        $contact = wa()->getUser();
+        $contact_id = $contact->getId();
         $mlmCustomersModel = new shopMlmCustomersModel();
         $customer = $mlmCustomersModel->getByContactId($contact_id);
 
@@ -235,6 +238,7 @@ class shopMlmPlugin extends shopPlugin
 
         $customerClass = new shopMlmPluginCustomer();
 
+        $view->assign('contact', $contact);
         $view->assign('parent', $mlmCustomersModel->getParent($customer));
         $view->assign('subtree', $customerClass->customers($customer['id'], 3));
         $view->assign('promo', $this->getSettings('promo'));
