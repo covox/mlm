@@ -9,6 +9,12 @@
             [`Recommendation from:&nbsp;`]{$parent.name}
         </p>
     {/if}
+
+    <pre>
+    {*$subtree|var_dump*}
+    </pre>
+
+    {wa_print_tree tree=$subtree unfolded=true collapsible_class='collapsible' class="menu-v category-tree" elem ='<a href="#" title=":name">:name</a>'}
 {else}
 
     <!-- not a referall partner yet -->

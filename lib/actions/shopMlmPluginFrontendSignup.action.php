@@ -30,11 +30,11 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
             $storage = new waSessionStorage();
             $storage->set('mlm_id', $mlm_id);
             $mlmCustomersModel = new shopMlmCustomersModel();
-            $customer = $mlmCustomersModel->getById($mlm_id);
-            if (!empty($customer)) {
-                $this->view->assign('parent', $mlmCustomersModel->getParent($customer));
+            $parent = $mlmCustomersModel->getContact($mlmCustomersModel->getByCode($mlm_id));
+            if (!empty($parent)) {
+                $this->view->assign('parent', $parent);
             }
-
+            $this->view->assign('mlm_id', $mlm_id);
         }
 
         $confirm_hash = waRequest::get('confirm', false);
@@ -76,21 +76,12 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
         $this->view->assign('errors', $errors);
         wa()->getResponse()->setTitle(_ws('Sign up'));
 
-        $plugin = self::getPlugin();
-        $settings = $plugin->getSettings();
-//        var_dump($settings['mlm_id']);
-
-
-
-
         $signup_path = wa()->getDataPath('plugins/mlm/templates/signup.html', false, 'shop', true);
         if (!file_exists($signup_path)) {
             $signup_path = wa()->getAppPath('plugins/mlm/templates/signup.html', 'shop');
         }
 
         $this->setTemplate($signup_path);
-        //var_dump($signup_path);
-        //$this->setTemplate($plugin->getThemePath().'/signup.html');
         $this->setLayout(new shopFrontendLayout());
         $this->getResponse()->setTitle(_wp('Sign up'));
 
@@ -101,8 +92,6 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
      */
     protected function afterSignup(waContact $contact)
     {
-//var_dump($contact);
-//        exit;
         $plugin = self::getPlugin();
         $settings = $plugin->getSettings();
         $storage = new waSessionStorage();

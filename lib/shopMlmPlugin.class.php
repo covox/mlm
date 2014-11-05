@@ -39,6 +39,9 @@ class shopMlmPlugin extends shopPlugin
     public function signupForm($errors = array())
     {
         $fields = $this->signupFields($errors);
+        //print '<pre>';
+        //var_dump($fields);
+        //print '</pre>';
         $html = '<div class="wa-form"><form action="'.$this->signupUrl().'" method="post">';
         foreach ($fields as $field_id => $field) {
             if ($field) {
@@ -134,14 +137,19 @@ class shopMlmPlugin extends shopPlugin
 
     public function signupFields($errors = array())
     {
+        //print '----------';
         $config = wa()->getAuthConfig();
+        $mlm_id = waRequest::get('mlm_id', 0, 'int');
+
         $config_fields = isset($config['fields']) ? $config['fields']: array(
+ //           'mlm_id',
             'firstname',
             'lastname',
             '',
             'email' => array('required' => true),
             'password' => array('required' => true),
         );
+       // var_dump($config_fields);
         $format_fields = array();
         foreach ($config_fields as $k => $v) {
             if (is_numeric($k)) {
@@ -167,6 +175,11 @@ class shopMlmPlugin extends shopPlugin
                 $f = waContactFields::get($id);
                 if ($f) {
                     $fields[$field_id] = array($f, $field);
+                } elseif ($field_id == 'mlm_id') {
+                    //$val = $mlm_id > 0 ? $mlm_id : '';
+                   // var_dump($field);
+                    //$waHtmlControl = new waHtmlControl();
+                    //$fields[$field_id] = array(waHtmlControl::getControl('input', 'mlm_id', array('value' => $val)));
                 } elseif ($field_id == 'login') {
                     $fields[$field_id] = array(new waContactStringField($field_id, _ws('Login')), $field);
                 } elseif ($field_id == 'password') {
@@ -191,10 +204,13 @@ class shopMlmPlugin extends shopPlugin
         if (!$this->getSettings('enabled')) {
             return;
         }
+        $view = self::getView();
 
         $contact_id = wa()->getUser()->getId();
         $mlmCustomersModel = new shopMlmCustomersModel();
         $customer = $mlmCustomersModel->getByContactId($contact_id);
+
+
 
         if (!$customer) {
             $customer = array(
@@ -206,7 +222,6 @@ class shopMlmPlugin extends shopPlugin
         }
 
         if ($customer) {
-            $view = self::getView();
             $view->assign('code', $customer['code']);
             //$this->view->assign('data', $this->getReportsData($referral));
 
@@ -217,7 +232,11 @@ class shopMlmPlugin extends shopPlugin
             $view->assign('date_format', $format);
             $view->assign('activity', $this->getSettings('activity'));
         }
+
+        $customerClass = new shopMlmPluginCustomer();
+
         $view->assign('parent', $mlmCustomersModel->getParent($customer));
+        $view->assign('subtree', $customerClass->customers($customer['id'], 3));
         $view->assign('promo', $this->getSettings('promo'));
         return $view->fetch($this->path . '/templates/frontendMyAffiliate.html');
     }

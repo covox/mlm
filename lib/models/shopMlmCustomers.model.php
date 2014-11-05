@@ -1,9 +1,31 @@
 <?php
 
-class shopMlmCustomersModel extends shopCustomerModel
+class shopMlmCustomersModel extends waNestedSetModel
 {
     protected $table = 'shop_mlm_customers';
-    protected $id = 'code';
+    //protected $id = 'code';
+
+    protected $left = 'left_key';
+    protected $right = 'right_key';
+    protected $parent = 'parent_id';
+
+    const TYPE_STATIC = 0;
+    const TYPE_DYNAMIC = 1;
+
+    /**
+     * @var shopMlmPlugin $plugin
+     */
+    private static $plugin;
+
+    private static function getPlugin()
+    {
+        if (!empty(self::$plugin)) {
+            $plugin = self::$plugin;
+        } else {
+            $plugin = wa()->getPlugin('mlm');
+        }
+        return $plugin;
+    }
 
     /**
      * @param $contact_id
@@ -16,22 +38,29 @@ class shopMlmCustomersModel extends shopCustomerModel
 
     /**
      * @param $contact_id
+     * @return mixed
+     */
+    public function getByCode($code)
+    {
+        return $this->getByField('code', $code);
+    }
+
+    /**
+     * @param $contact_id
      * @return int
      */
-    public function add($contact_id, $parent_code=0)
+    public function add($contact_id, $parent_code=0, $before_id = null)
     {
         do {
             $code = rand(100, 1000000);
-        } while ($this->getById($code));
+        } while ($this->getByField('code', $code));
 
-        if ($parent_code > 0 && $parent = $this->getById($parent_code)) {
-            $parent_id = $parent['contact_id'];
+        if ($parent_code > 0 && $parent = $this->getByField('code', $parent_code)) {
+            $parent_contact_id = $parent['contact_id'];
+            $parent_id = $parent['id'];
         }
         else {
-            /**
-             * @var shopMlmPlugin $plugin
-             */
-            $plugin = wa('shop')->getPlugin('mlm');
+            $plugin = self::getPlugin();
             $settings = $plugin->getSettings();
             if (isset ($settings['owners'])) {
                 $owners = $settings['owners'];
@@ -55,27 +84,64 @@ class shopMlmCustomersModel extends shopCustomerModel
             }
 
             if ($settings['probability'] == 0) {
-                $parent_id = $this->getNextOwnerId($owners, $settings['last_owner_id']);
-                $settings['last_owner_id'] = $parent_id;
+                $parent_contact_id = $this->getNextOwnerId($owners, $settings['last_owner_id']);
+                $settings['last_owner_id'] = $parent_contact_id;
             }
             else {
-                $parent_id = $this->getRandomOwnerId($owners);
+                $parent_contact_id = $this->getRandomOwnerId($owners);
             }
 
             $plugin->saveSettings($settings);
+
+            $parent = $this->getByField('contact_id', $parent_contact_id);
+            if (empty($parent)) {
+                $parent_id = 0;
+            }
+            else {
+                $parent_id = $parent['id'];
+            }
         }
 
-        $this->insert(array(
+        if ($this->isOwner($contact_id)) {
+            $parent_contact_id = 0;
+            $parent_id = 0;
+        }
+
+        $data = array(
             'code' => $code,
-            'contact_id' => $contact_id,
-            'parent_id' => $parent_id,
+            'contact_id' => intval($contact_id),
+            'parent_contact_id' => intval($parent_contact_id),
             'create_datetime' => date('Y-m-d H:i:s')
-        ));
-        return $code;
+        );
+
+
+        //var_dump($parent_contact_id);
+        //exit;
+
+        print '<pre>';
+        //$this->isOwner($contact_id);
+        //var_dump($data);
+        print '</pre>';
+
+        $id = parent::add($data, $parent_id);
+        $row = $this->getById($id);
+
+
+//        exit;
+        return $row['code'];
     }
 
     public function getParent($customer) {
-        $contact = new waContact($customer['parent_id']);
+        $customer = $this->getByContactId($customer['contact_id']);
+        if (!empty($customer)) {
+            $contact = new waContact($customer['parent_contact_id']);
+            return $contact->load();
+        }
+        else false;
+    }
+
+    public function getContact($customer) {
+        $contact = new waContact($customer['contact_id']);
         return $contact->load();
     }
 
@@ -130,93 +196,191 @@ class shopMlmCustomersModel extends shopCustomerModel
 
     }
 
-    public function getReferralsList($start=0, $limit=50, $order='name')
+    public function isOwner($contact_id) {
+        $plugin = self::getPlugin();
+        $settings = $plugin->getSettings();
+        if (isset ($settings['owners'])) {
+            $owners = $settings['owners'];
+        }
+        else false;
+
+        if (isset($owners[$contact_id])) {
+            return true;
+        }
+        else false;
+    }
+
+    public function delete($id)
     {
-        $start = (int) $start;
-        $limit = (int) $limit;
+        $id = (int)$id;
+        $item = $this->getById($id);
+        if (!$item) {
+            return false;
+        }
+        $parent_id = (int)$item['parent_id'];
 
-        $join = array();
-        $select = array(
-            'sc.*, c.*, o.create_datetime AS last_order_datetime'
-        );
+          // because all descendants will be thrown one level up
+        // it's necessary to ensure uniqueness urls of descendants in new environment (new parent)
+        foreach (
+            $this->descendants($item, false)->order("`{$this->depth}`, `{$this->left}`")->query()
+            as $child)
+        {
 
-        $join[] = 'JOIN shop_referrals AS r ON r.contact_id=c.id';
-
-        if ($join) {
-            $join = implode("\n", $join);
-        } else {
-            $join = '';
         }
 
-        $possible_orders = array(
-            'name' => 'c.name',
-            '!name' => 'c.name DESC',
-            'total_spent' => 'sc.total_spent',
-            '!total_spent' => 'sc.total_spent DESC',
-            'affiliate_bonus' => 'sc.affiliate_bonus',
-            '!affiliate_bonus' => 'sc.affiliate_bonus DESC',
-            'number_of_orders' => 'sc.number_of_orders',
-            '!number_of_orders' => 'sc.number_of_orders DESC',
-            'last_order' => 'sc.last_order_id',
-            '!last_order' => 'sc.last_order_id DESC',
-            'registered' => 'c.create_datetime',
-            '!registered' => 'c.create_datetime DESC',
-        );
-
-        if (!$order || empty($possible_orders[$order])) {
-            $order = key($possible_orders);
+        if (!parent::delete($id)) {
+            return false;
         }
-        $order = 'ORDER BY '.$possible_orders[$order];
 
-        // Fetch basic contact and customer info
-        $sql = "SELECT SQL_CALC_FOUND_ROWS ".implode(', ', $select)."
-                FROM wa_contact AS c
-                    JOIN shop_customer AS sc
-                        ON c.id=sc.contact_id
-                    LEFT JOIN shop_order AS o
-                        ON o.id=sc.last_order_id
-                    $join
-                GROUP BY c.id
-                $order
-                LIMIT {$start}, {$limit}";
 
-        $customers = $this->query($sql)->fetchAll('id');
+        return true;
 
-        $total = $this->query('SELECT FOUND_ROWS()')->fetchField();
+    }
 
-        // get emails
-        $ids = array_keys($customers);
-        if ($ids) {
-            foreach ($this->query("
-                SELECT contact_id, email, MIN(sort)
-                FROM `wa_contact_emails`
-                WHERE contact_id IN (".implode(',', $ids).")
-                GROUP BY contact_id") as $item)
-            {
-                $customers[$item['contact_id']]['email'] = $item['email'];
+    /**
+     *
+     * Query for getting descendants
+     *
+     * @param mixed $parent
+     *     int parent ID
+     *     array parent info
+     *     false|null query for all tree
+     * @param boolean $include_parent
+     * @return waDbQuery
+     */
+    public function descendants($parent, $include_parent = false)
+    {
+        $query = new waDbQuery($this);
+
+        if (is_numeric($parent) && $parent) {
+            $parent_id = (int)$parent;
+            $parent = $this->getById($parent);
+            if (!$parent) {
+                return $query->where('id = '.$parent_id);
             }
         }
-
-        if (!$customers) {
-            return array(array(), 0);
+        $op = !$include_parent ? array('>', '<') : array('>=', '<=');
+        if ($parent) {
+            $where = "
+                `{$this->left}`  {$op[0]} {$parent[$this->left]} AND
+                `{$this->right}` {$op[1]} {$parent[$this->right]}
+            ";
+            $query->where($where);
         }
-
-        // Fetch addresses
-        foreach($customers as &$c) {
-            $c['address'] = array();
-        }
-        unset($c);
-
-        $sql = "SELECT *
-                FROM wa_contact_data
-                WHERE contact_id IN (i:ids)
-                    AND sort=0
-                    AND field LIKE 'address:%'
-                ORDER BY contact_id";
-        foreach ($this->query($sql, array('ids' => array_keys($customers))) as $row) {
-            $customers[$row['contact_id']]['address'][substr($row['field'], 8)] = $row['value'];
-        }
-
-        return array($customers, $total);
+        return $query;
     }
+
+    public function recount($category_id = null)
+    {
+        $cond = "
+            WHERE c.type = ".self::TYPE_STATIC."
+            GROUP BY c.id
+            HAVING c.count != cnt
+        ";
+        if ($category_id !== null) {
+            $category_ids = array();
+            foreach ((array)$category_id as $id) {
+                $category_ids[] = $id;
+            }
+            if (!$category_ids) {
+                return;
+            }
+            $cond = "
+                WHERE c.id IN ('".implode("','", $this->escape($category_ids))."') AND c.type = ".self::TYPE_STATIC."
+                GROUP BY c.id
+            ";
+        }
+        $sql = "
+            UPDATE `{$this->table}` c JOIN (
+            SELECT c.id, c.count, count(cp.product_id) cnt
+            FROM `{$this->table}` c
+            LEFT JOIN `shop_category_products` cp ON cp.category_id = c.id
+            $cond
+            ) r ON c.id = r.id
+            SET c.count = r.cnt
+        ";
+        return $this->exec($sql);
+    }
+
+    protected function repairSubtree(&$subtree, $depth = -1, $key = 0)
+    {
+        $subtree[$this->left] = $key;
+        $subtree[$this->depth] = $depth;
+        if (!empty($subtree['children'])) {
+            foreach ($subtree['children'] as & $node) {
+                $key = $this->repairSubtree($node, $depth + 1, $key + 1);
+            }
+        }
+        $subtree[$this->right] = $key + 1;
+        return $key + 1;
+    }
+
+    /**
+     * @param string $fields
+     * @param bool $static_only
+     * @return array
+     */
+    public function getFullTree($fields = '', $static_only = false)
+    {
+        if (!$fields) {
+            $fields = 'id, left_key, right_key, parent_id, depth, name, count, type, status';
+        }
+
+        $fields = $this->escape($fields);
+
+        $where = $static_only ? 'WHERE type='.self::TYPE_STATIC : '';
+        $sql = "SELECT $fields FROM {$this->table} $where ORDER BY {$this->left}";
+        return $this->query($sql)->fetchAll('id');
+    }
+
+    /**
+     * Returns subtree
+     *
+     * @param int $id
+     * @param int $depth related depth default is unlimited
+     * @param bool $escape
+     * @param array $where
+     * @return array
+     */
+    public function getTree($id, $depth = null, $escape = false)
+    {
+        $where = array();
+        if ($id) {
+            $parent = $this->getById($id);
+            $left  = (int) $parent[$this->left];
+            $right = (int) $parent[$this->right];
+        } else {
+            $left = $right = 0;
+        }
+
+
+        $sql = "SELECT c.* FROM {$this->table} c";
+        if ($id) {
+            $where[] = "c.`{$this->left}` >= i:left";
+            $where[] = "c.`{$this->right}` <= i:right";
+        }
+        if ($depth !== null) {
+            $depth = max(0, intval($depth));
+            if ($id && $parent) {
+                $depth += (int)$parent[$this->depth];
+            }
+            $where[] = "c.`{$this->depth}` <= i:depth";
+        }
+
+        if ($where) {
+            $sql .= " WHERE (" . implode(') AND (', $where) . ')';
+        }
+        $sql .= " ORDER BY c.`{$this->left}`";
+
+        $data = $this->query($sql, array('left' => $left, 'right' => $right, 'depth' => $depth))->fetchAll($this->id);
+
+        if ($escape) {
+            foreach ($data as &$item) {
+                $item['name'] = htmlspecialchars($item['name']);
+            }
+            unset($item);
+        }
+        return $data;
+    }
+
 }
