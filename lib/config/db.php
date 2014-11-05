@@ -12,7 +12,6 @@ return array(
         'create_datetime' => array('datetime'),
         ':keys' => array(
             'PRIMARY' => array('id', 'contact_id'),
-            'parent_id' => array('parent_id', 'unique' => 1),
             'left_key' => 'left_key',
             'right_key' => 'right_key',
         ),
