@@ -22,8 +22,8 @@ class shopMlmPluginAffiliateSettingsAction extends waViewAction
         $plugin = self::getPlugin();
         $settings = $plugin->getSettings();
         $this->view->assign('settings', $settings);
-        $this->view->assign('enabled', ifset($settings['enabled']));
-        $this->view->assign('probability', ifset($settings['probability']));
+        $this->view->assign('enabled', (isset($settings['enabled']) ? $settings['enabled'] : 0 ));
+        $this->view->assign('probability', (isset($settings['probability']) ? $settings['probability'] : 0 ));
 
         $owners = array();
         $um = new waUserModel();
