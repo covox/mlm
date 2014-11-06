@@ -35,6 +35,10 @@ class shopMlmPluginAffiliateSettingsAction extends waViewAction
         $this->view->assign('settings', $settings);
         $this->view->assign('enabled', $settings['enabled']);
         $this->view->assign('probability', $settings['probability']);
+        
+        if(!$this->mlmContactFieldExists()) {
+            $this->mlmContactFieldCreate();
+        }
 
         $owners = array();
         $um = new waUserModel();
@@ -55,5 +59,22 @@ class shopMlmPluginAffiliateSettingsAction extends waViewAction
 
         $c = waCurrency::getInfo(wa()->getConfig()->getCurrency());
         $this->view->assign('currency', ifset($c['sign'], wa()->getConfig()->getCurrency()));
+    }
+    
+    private function mlmContactFieldCreate()
+    {
+        $field_options = array(
+            'app_id' => 'shop.mlm',
+            
+        );
+        $field = new waContactStringField(shopMlmPlugin::MLM_PROMO_CODE_CONTACTFIELD, 'Code', $field_options);
+        
+        waContactFields::updateField($field);
+        waContactFields::enableField($field, 'person');
+    }
+
+    private function mlmContactFieldExists()
+    {
+        return !is_null(waContactFields::get(shopMlmPlugin::MLM_PROMO_CODE_CONTACTFIELD));
     }
 }

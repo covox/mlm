@@ -2,6 +2,7 @@
 
 class shopMlmPlugin extends shopPlugin
 {
+    const MLM_PROMO_CODE_CONTACTFIELD = 'mlm_promo_code';
     /**
      * @var waView $view
      */
