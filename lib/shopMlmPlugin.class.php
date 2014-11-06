@@ -244,4 +244,10 @@ class shopMlmPlugin extends shopPlugin
         $view->assign('promo', $this->getSettings('promo'));
         return $view->fetch($this->path . '/templates/frontendMyAffiliate.html');
     }
+
+    public function orderActionComplete($data){
+        var_dump($data);
+       //exit;
+
+    }
 }

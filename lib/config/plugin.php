@@ -10,6 +10,7 @@ return array (
         array (
             'backend_settings_affiliate' => 'backendSettingsAffiliate',
             'frontend_my_affiliate' => 'frontendMyAffiliate',
+            'order_action.complete' => 'orderActionComplete',
         ),
     'frontend' => true,
 );
