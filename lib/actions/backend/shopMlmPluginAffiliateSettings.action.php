@@ -19,11 +19,22 @@ class shopMlmPluginAffiliateSettingsAction extends waViewAction
 
     public function execute()
     {
-        $plugin = self::getPlugin();
-        $settings = $plugin->getSettings();
+        $default_settings = array(
+            'enabled' => 0,
+            'probability' => 0,
+            'rate' => 100,
+            'level_1_percent' => 1,
+            'level_2_percent' => 1,
+            'level_3_percent' => 1,
+            'notifications' => 0,
+            'promo' => '',
+            'terms' => ''
+        );
+        
+        $settings = array_merge($default_settings, self::getPlugin()->getSettings());
         $this->view->assign('settings', $settings);
-        $this->view->assign('enabled', (isset($settings['enabled']) ? $settings['enabled'] : 0 ));
-        $this->view->assign('probability', (isset($settings['probability']) ? $settings['probability'] : 0 ));
+        $this->view->assign('enabled', $settings['enabled']);
+        $this->view->assign('probability', $settings['probability']);
 
         $owners = array();
         $um = new waUserModel();
