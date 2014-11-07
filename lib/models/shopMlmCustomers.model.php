@@ -382,12 +382,43 @@ class shopMlmCustomersModel extends waNestedSetModel
         }
         return $data;
     }
+    
+    /**
+     * Возвращает 3 уровня родителей
+     * Уровень 1 — прямой родитель
+     * Уровень 2 — родитель родителя (дедушка :) )
+     * Уровень 3 — родитель родителя родителя (прадедушка-бугор :) )
+     * 
+     * Если родителя нет, то этого элемента просто не будет
+     * [
+     *   [1] => [родитель]
+     *   [2] => [родитель родителя]
+     *   [3] => [родитель родителя родителя]
+     * ]
+     * 
+     * @todo Можно модифицировать на любой уровень вложенности
+     * 
+     * @param int $contact_id
+     * @return array
+     */
+    public function getThreeParents($contact_id) {
+        $customer = $this->getByContactId($contact_id);
+        $result = array();
+        for($level=1; $level <= 3 && !empty($customer) && $customer["parent_id"]; $level++) {
+            $customer = $this->getById($customer["parent_id"]);
+            $result[$level] = $customer;
+        }
+        
+        return $result;
+    }
 
     /**
      * Добавляет бонусы "родителям" контакта. До трех уровней.
      * Уровень 1 — прямой родитель
      * Уровень 2 — родитель родителя (дедушка :) )
      * Уровень 3 — родитель родителя родителя (прадедушка-бугор :) )
+     * 
+     * @todo Если сумму бонусов считаем в модели shopCustomerModel, то этот метод удалить
      * 
      * @see shopMlmPlugin::calculateBonus() Структура массива с бонусами
      * 
@@ -408,6 +439,8 @@ class shopMlmCustomersModel extends waNestedSetModel
      * Добавляет указанный бонус контакту
      * 
      * FIXME: обработка ошибок? Выбрасывать какое-то исключение?
+     * 
+     * @todo Если сумму бонусов считаем в модели shopCustomerModel, то этот метод удалить
      * 
      * @param int $customer_id
      * @param float $bonus

@@ -247,16 +247,27 @@ class shopMlmPlugin extends shopPlugin
         return $view->fetch($this->path . '/templates/frontendMyAffiliate.html');
     }
 
+    /**
+     * Handler for order_arction.complete Hook
+     * 
+     * @param array $data
+     */
     public function orderActionComplete($data)
     {
         $Order = new shopOrderModel();
         $MlmCustomer = new shopMlmCustomersModel();
+        $ShopCustomer = new shopCustomerModel(); // здесь суммируются Affiliate Bonuses
         $order = $Order->getOrder($data['order_id']);
-
-        $MlmCustomer->addBonusToParents($order["contact_id"], $this->calculateBonus($order));
+        $bonuses = $this->calculateBonus($order);
         
-       //exit;
-
+        /** FIXME: Так не делают. Надо расширить класс shopCustomer и сделать в нем метод добавления бонуса */
+        foreach($MlmCustomer->getThreeParents($order["contact_id"]) as $level => $mlm_customer) {
+            $ShopCustomer->query("UPDATE s:table SET `affiliate_bonus`=`affiliate_bonus`+f:bonus WHERE `contact_id`=i:contact_id", array(
+                'table' => $ShopCustomer->getTableName(),
+                'bonus' => $bonuses[$level],
+                'contact_id' => $mlm_customer['contact_id']
+            ));
+        }
     }
     
     /**
