@@ -252,4 +252,47 @@ class shopMlmPlugin extends shopPlugin
        //exit;
 
     }
+    
+    /**
+     * Возвращает массив с посчитанными бонусами для каждого из трех уровней
+     * [
+     *   1 => [bonus => xxx]
+     *   2 => [bonus => yyy]
+     *   3 => [bonus => zzz]
+     * ]
+     * 
+     * Цифра уровень, указывающий на массив, в массиве ключ bonus указывает на
+     * количество бонусов
+     * 
+     * FIXME: Возможно, для расчета бонусов надо использовать не общую стоимость
+     *        заказа, а только стоимость товаров, без учета доставки и/или
+     *        скидок
+     * 
+     * @param waOrder $order
+     * @return array
+     */
+    private function calculateBonus($order)
+    {
+        $settings = array(
+            'level_1_percent' => 0,
+            'level_2_percent' => 0,
+            'level_3_percent' => 0,
+        );
+        
+        $result = array(
+            1=>array('bonus'=>0),
+            2=>array('bonus'=>0),
+            3=>array('bonus'=>0),
+        );
+        
+        foreach($settings as $key => $value) {
+            $settings[$key] = $this->getSettings($key) ? $this->getSettings($key) : $value;
+        }
+        
+        for($i = 1; $i <= 3; $i++) {
+            $result[$i]['bonus'] = $order["total"] * $settings["level_{$i}_percent"] / 100;
+        }
+        
+        return $result;
+    }
 }
