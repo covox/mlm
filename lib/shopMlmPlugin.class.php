@@ -206,7 +206,9 @@ class shopMlmPlugin extends shopPlugin
         }
         $view = self::getView();
         $this->addJs('js/jstree/jstree.min.js');
+        $this->addJs('js/qtip/jquery.qtip.min.js');
         $this->addCss('js/jstree/themes/default/style.min.css');
+        $this->addCss('js/qtip/jquery.qtip.min.css');
 
         $contact = wa()->getUser();
         $contact_id = $contact->getId();
