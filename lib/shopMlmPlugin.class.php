@@ -256,18 +256,25 @@ class shopMlmPlugin extends shopPlugin
     {
         $Order = new shopOrderModel();
         $MlmCustomer = new shopMlmCustomersModel();
-        $ShopCustomer = new shopCustomerModel(); // здесь суммируются Affiliate Bonuses
+//        $ShopCustomer = new shopCustomerModel(); // здесь суммируются Affiliate Bonuses
+        $AffiliateTransaction = new shopAffiliateTransactionModel(); // Правильный метод добавления стандартных бонусов
         $order = $Order->getOrder($data['order_id']);
         $bonuses = $this->calculateBonus($order);
-        
-        /** FIXME: Так не делают. Надо расширить класс shopCustomer и сделать в нем метод добавления бонуса */
+        $buyer = new shopCustomer($order["contact_id"]);
+
         foreach($MlmCustomer->getThreeParents($order["contact_id"]) as $level => $mlm_customer) {
-            $ShopCustomer->query("UPDATE s:table SET `affiliate_bonus`=`affiliate_bonus`+f:bonus WHERE `contact_id`=i:contact_id", array(
-                'table' => $ShopCustomer->getTableName(),
-                'bonus' => $bonuses[$level],
-                'contact_id' => $mlm_customer['contact_id']
-            ));
+
+            $AffiliateTransaction->applyBonus(
+                    $mlm_customer['contact_id'],
+                    $bonuses[$level]['bonus'],
+                    $order['id'],
+                    sprintf(
+                            _wp("Bonus for MLM customer %s's order %s"),
+                            $buyer->getName(),
+                            shopHelper::encodeOrderId($order['id'])),
+                    'mlm_bonus');
         }
+        
     }
     
     /**
@@ -307,7 +314,7 @@ class shopMlmPlugin extends shopPlugin
         }
         
         for($i = 1; $i <= 3; $i++) {
-            $result[$i]['bonus'] = $order["total"] * $settings["level_{$i}_percent"] / 100;
+            $result[$i]['bonus'] = shopAffiliate::calculateBonus($order['id'], 100/$settings["level_{$i}_percent"]);
         }
         
         return $result;
