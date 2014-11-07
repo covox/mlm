@@ -247,8 +247,14 @@ class shopMlmPlugin extends shopPlugin
         return $view->fetch($this->path . '/templates/frontendMyAffiliate.html');
     }
 
-    public function orderActionComplete($data){
-        var_dump($data);
+    public function orderActionComplete($data)
+    {
+        $Order = new shopOrderModel();
+        $MlmCustomer = new shopMlmCustomersModel();
+        $order = $Order->getOrder($data['order_id']);
+
+        $MlmCustomer->addBonusToParents($order["contact_id"], $this->calculateBonus($order));
+        
        //exit;
 
     }
@@ -268,7 +274,7 @@ class shopMlmPlugin extends shopPlugin
      *        заказа, а только стоимость товаров, без учета доставки и/или
      *        скидок
      * 
-     * @param waOrder $order
+     * @param array $order
      * @return array
      */
     private function calculateBonus($order)

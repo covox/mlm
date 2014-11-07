@@ -383,4 +383,38 @@ class shopMlmCustomersModel extends waNestedSetModel
         return $data;
     }
 
+    /**
+     * Добавляет бонусы "родителям" контакта. До трех уровней.
+     * Уровень 1 — прямой родитель
+     * Уровень 2 — родитель родителя (дедушка :) )
+     * Уровень 3 — родитель родителя родителя (прадедушка-бугор :) )
+     * 
+     * @see shopMlmPlugin::calculateBonus() Структура массива с бонусами
+     * 
+     * @param int $contact_id
+     * @param array $bonus
+     */
+    public function addBonusToParents($contact_id, $bonus)
+    {
+        $customer = $this->getByContactId($contact_id);
+
+        for($level=1; $level <= 3 && !empty($customer) && $customer["parent_id"]; $level++) {
+            $customer = $this->getById($customer["parent_id"]);
+            $this->addBonus($customer["id"], $bonus[$level]["bonus"]);
+        }
+    }
+    
+    /**
+     * Добавляет указанный бонус контакту
+     * 
+     * FIXME: обработка ошибок? Выбрасывать какое-то исключение?
+     * 
+     * @param int $customer_id
+     * @param float $bonus
+     */
+    private function addBonus($customer_id, $bonus)
+    {
+        $this->query("UPDATE {$this->table} SET `bonus_total`=`bonus_total`+ f:bonus WHERE id=i:id", array('bonus'=>$bonus, 'id'=>$customer_id));
+    }
+    
 }
