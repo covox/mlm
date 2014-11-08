@@ -372,22 +372,22 @@ class shopMlmCustomersModel extends waNestedSetModel
         }
         return $data;
     }
-    
+
     /**
      * Возвращает 3 уровня родителей
      * Уровень 1 — прямой родитель
      * Уровень 2 — родитель родителя (дедушка :) )
      * Уровень 3 — родитель родителя родителя (прадедушка-бугор :) )
-     * 
+     *
      * Если родителя нет, то этого элемента просто не будет
      * [
      *   [1] => [родитель]
      *   [2] => [родитель родителя]
      *   [3] => [родитель родителя родителя]
      * ]
-     * 
+     *
      * @todo Можно модифицировать на любой уровень вложенности
-     * 
+     *
      * @param int $contact_id
      * @return array
      */
@@ -398,7 +398,7 @@ class shopMlmCustomersModel extends waNestedSetModel
             $customer = $this->getById($customer["parent_id"]);
             $result[$level] = $customer;
         }
-        
+
         return $result;
     }
 
@@ -407,11 +407,11 @@ class shopMlmCustomersModel extends waNestedSetModel
      * Уровень 1 — прямой родитель
      * Уровень 2 — родитель родителя (дедушка :) )
      * Уровень 3 — родитель родителя родителя (прадедушка-бугор :) )
-     * 
+     *
      * @todo Если сумму бонусов считаем в модели shopCustomerModel, то этот метод удалить
-     * 
+     *
      * @see shopMlmPlugin::calculateBonus() Структура массива с бонусами
-     * 
+     *
      * @param int $contact_id
      * @param array $bonus
      */
@@ -424,14 +424,45 @@ class shopMlmCustomersModel extends waNestedSetModel
             $this->addBonus($customer["id"], $bonus[$level]["bonus"]);
         }
     }
-    
+
+    /**
+     * Подсчитывает количество реферралов для указанного контакта на заданном
+     * уровне. Уровень в принципе может быть любым, но сейчас мы используем
+     * от 1 до 3
+     *
+     * @param int|array $customer ID записи из этой модели (int) или массив с данными о контакте из этой модели (array)
+     * @param int $level Уровень
+     * @return int количество реферралов
+     */
+    public function countReferrals($customer, $level)
+    {
+        if(!is_array($customer)) {
+            $customer = $this->getById($customer);
+        }
+
+        if(empty($customer)) {
+            return 0;
+        }
+
+
+        $result = $this->select("COUNT(*) as cnt")->
+                where("left_key > i:lft AND right_key < i:rght AND depth=i:depth", array(
+                    'lft' => $customer['left_key'],
+                    'rght' => $customer['right_key'],
+                    'depth' => $customer['depth']+$level
+                ))->
+                fetchField();
+
+        return $result;
+    }
+
     /**
      * Добавляет указанный бонус контакту
-     * 
+     *
      * FIXME: обработка ошибок? Выбрасывать какое-то исключение?
-     * 
+     *
      * @todo Если сумму бонусов считаем в модели shopCustomerModel, то этот метод удалить
-     * 
+     *
      * @param int $customer_id
      * @param float $bonus
      */
@@ -439,5 +470,7 @@ class shopMlmCustomersModel extends waNestedSetModel
     {
         $this->query("UPDATE {$this->table} SET `bonus_total`=`bonus_total`+ f:bonus WHERE id=i:id", array('bonus'=>$bonus, 'id'=>$customer_id));
     }
-    
+
+
+
 }
