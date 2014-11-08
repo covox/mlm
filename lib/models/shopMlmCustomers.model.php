@@ -114,18 +114,8 @@ class shopMlmCustomersModel extends waNestedSetModel
             'create_datetime' => date('Y-m-d H:i:s')
         );
 
-
-        //var_dump($parent_contact_id);
-        //exit;
-
-        print '<pre>';
-        //$this->isOwner($contact_id);
-        //var_dump($data);
-        print '</pre>';
-
         $id = parent::add($data, $parent_id);
         $row = $this->getById($id);
-
 
 //        exit;
         return $row['code'];
