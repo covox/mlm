@@ -204,6 +204,13 @@ class shopMlmPlugin extends shopPlugin
         if (!$this->getSettings('enabled')) {
             return;
         }
+
+        // Без жнецов плагин не работает
+        $owners = $this->getSettings('owners');
+        if(!$owners || empty($owners) || !is_array($owners)) {
+            return;
+        }
+
         $view = self::getView();
         $this->addJs('js/jstree/jstree.min.js');
         $this->addJs('js/qtip/jquery.qtip.min.js');
@@ -249,7 +256,7 @@ class shopMlmPlugin extends shopPlugin
 
     /**
      * Handler for order_arction.complete Hook
-     * 
+     *
      * @param array $data
      */
     public function orderActionComplete($data)
@@ -274,9 +281,9 @@ class shopMlmPlugin extends shopPlugin
                             shopHelper::encodeOrderId($order['id'])),
                     'mlm_bonus');
         }
-        
+
     }
-    
+
     /**
      * Возвращает массив с посчитанными бонусами для каждого из трех уровней
      * [
@@ -284,14 +291,14 @@ class shopMlmPlugin extends shopPlugin
      *   2 => [bonus => yyy]
      *   3 => [bonus => zzz]
      * ]
-     * 
+     *
      * Цифра уровень, указывающий на массив, в массиве ключ bonus указывает на
      * количество бонусов
-     * 
+     *
      * FIXME: Возможно, для расчета бонусов надо использовать не общую стоимость
      *        заказа, а только стоимость товаров, без учета доставки и/или
      *        скидок
-     * 
+     *
      * @param array $order
      * @return array
      */
@@ -302,21 +309,21 @@ class shopMlmPlugin extends shopPlugin
             'level_2_percent' => 0,
             'level_3_percent' => 0,
         );
-        
+
         $result = array(
             1=>array('bonus'=>0),
             2=>array('bonus'=>0),
             3=>array('bonus'=>0),
         );
-        
+
         foreach($settings as $key => $value) {
             $settings[$key] = $this->getSettings($key) ? $this->getSettings($key) : $value;
         }
-        
+
         for($i = 1; $i <= 3; $i++) {
             $result[$i]['bonus'] = shopAffiliate::calculateBonus($order['id'], 100/$settings["level_{$i}_percent"]);
         }
-        
+
         return $result;
     }
 }
