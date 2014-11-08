@@ -22,6 +22,37 @@
         </ul>
     </div>
 
+    <div id="s-plugin-mlm-stats">
+        <table>
+            <thead>
+                <tr>
+                    <th>Уровень</th>
+                    <th>Количество людей</th>
+                    <th>Сумма покупок</th>
+                    <th>% начислений</th>
+                    <th>Начислено</th>
+                    <th>Не начислено</th>
+                    <th>Причины</th>
+                </tr>
+            </thead>
+            <tbody>
+                {foreach $stats as $level=>$data}
+                    <tr>
+                        <td>{$level}</td>
+                        <td>{$data.referral_count}</td>
+                        <td>{$data.purchases_total}</td>
+                        <td>{$data.percent}</td>
+                        <td>{$data.bonuses_total}</td>
+                        <td>{$data.missed_bonuses_total}</td>
+                        <td>{implode(",", $data.reasons)}</td>
+                    </tr>
+                {/foreach}
+            </tbody>
+        </table>
+    </div>
+            
+    {*var_dump($stats)*}
+
 {else}
 
     <!-- not a referall partner yet -->

@@ -247,6 +247,7 @@ class shopMlmPlugin extends shopPlugin
 
         $customerClass = new shopMlmPluginCustomer();
 
+        $view->assign('stats', $this->getStats($contact_id));
         $view->assign('contact', $contact);
         $view->assign('parent', $mlmCustomersModel->getParent($customer));
         $view->assign('subtree', $customerClass->customers($customer['id'], 3));
@@ -322,4 +323,30 @@ class shopMlmPlugin extends shopPlugin
 
         return $result;
     }
+
+    /**
+     * Возвращает массив со статистикой для каждого уровня реферралов
+     * указанного контакта
+     *
+     * @param int $contact_id
+     * @return array Массив с тремя вложенными массивами со статистикой, по одному на каждый уровень
+     */
+    private function getStats($contact_id)
+    {
+        $result = array();
+
+        for($level = 1; $level<=3; $level++) {
+            $result[$level] = array(
+                'percent' => ($this->getSettings("level_{$level}_percent") ? $this->getSettings("level_{$level}_percent") : 0),
+                'referral_count' => 0,
+                'purchases_total' => 0,
+                'bonuses_total' => 0,
+                'missed_bonuses_total' => 0,
+                'reasons' => array()
+            );
+        }
+
+        return $result;
+    }
+
 }
