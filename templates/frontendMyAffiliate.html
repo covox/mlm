@@ -42,7 +42,7 @@
                         <td>{$data.referral_count}</td>
                         <td>{wa_currency_html($data.purchases_total, 'RUB')}</td>
                         <td>{$data.percent}</td>
-                        <td>{$data.bonuses_total}</td>
+                        <td>{$data.purchases_total*$data.percent/100}</td>
                         <td>{$data.missed_bonuses_total}</td>
                         <td>{implode(",", $data.reasons)}</td>
                     </tr>

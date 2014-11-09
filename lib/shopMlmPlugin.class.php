@@ -353,7 +353,7 @@ class shopMlmPlugin extends shopPlugin
                 'percent' => ($this->getSettings("level_{$level}_percent") ? $this->getSettings("level_{$level}_percent") : 0),
                 'referral_count' => $this->MlmCustomers->countReferrals($customer, $level),
                 'purchases_total' => $this->MlmCustomers->countReferralPurchasesTotals($customer, $level),
-                'bonuses_total' => $this->MlmCustomers->countReferralAccrualSum($customer, $level),
+                'bonuses_total' => 0, // Пока рассчитывается в шаблоне простым умножением и делением
                 'missed_bonuses_total' => 0,
                 'reasons' => array()
             );
