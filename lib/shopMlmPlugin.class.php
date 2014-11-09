@@ -21,6 +21,10 @@ class shopMlmPlugin extends shopPlugin
         $this->MlmCustomers = new shopMlmCustomersModel();
     }
 
+    /**
+     *
+     * @return waSmarty3View
+     */
     private static function getView()
     {
         if (!empty(self::$view)) {
@@ -299,20 +303,29 @@ class shopMlmPlugin extends shopPlugin
 
     /**
      * Получаем GET-переменную mlm_id и, если ее еще нет в сессии и пользователь
-     * не аутентифицирован, сохраняем в сессию
+     * не аутентифицирован, сохраняем в сессию. Если кто-то кликнул на
+     * несколько разных партнерских ссылок, то он все равно будет к первому
+     * привязан
      *
      * @return string Возвращаем пустую строку потому, что реально мы ничего в head не добавляем
      */
     public function frontendHead()
     {
-        if(waSystem::getInstance()->getUser()) { // это залогиненый пользователь, нам от него ничего не надо
-            return "";
+        $user = waSystem::getInstance()->getUser();
+        $mlm_id = waRequest::get('mlm_id', NULL, waRequest::TYPE_STRING_TRIM);
+        
+        $view = $this->getView();
+
+        if(!$user->isAuth() && $mlm_id && !waSystem::getInstance()->getStorage()->read('mlm_id')) { //такая переменная есть в GET, а сессии нет
+            waSystem::getInstance()->getStorage()->write('mlm_id', $mlm_id);
         }
 
-        $mlm_id = waRequest::get('mlm_id', NULL, waRequest::TYPE_STRING_TRIM);
-
-        if($mlm_id && !waSystem::getInstance()->getStorage()->read('mlm_id')) { //такая переменная есть в GET, а сессии нет
-            waSystem::getInstance()->getStorage()->write('mlm_id', $mlm_id);
+        $mlm_id = waSystem::getInstance()->getStorage()->read('mlm_id');
+        
+        if($mlm_id) {
+            $view->assign('field_id', self::MLM_PROMO_CODE_CONTACTFIELD);
+            $view->assign('mlm_id', $mlm_id);
+            return $view->fetch($this->path . '/templates/frontendHeadSignup.html');
         }
 
         return "";

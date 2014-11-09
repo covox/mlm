@@ -1,0 +1,9 @@
+<!-- '{waRequest::param('module')}' '{waRequest::param('action')}' -->
+{if waRequest::param('module') == 'signup' AND empty(waRequest::param('action'))}
+<script type="text/javascript">
+    $(function(){
+        $("input[name='data[{$field_id}]']").closest("div.wa-field").hide();
+        $("input[name='data[{$field_id}]']").val('{$mlm_id}');
+    });
+</script>
+{/if}
