@@ -8,6 +8,19 @@ class shopMlmPlugin extends shopPlugin
      */
     private static $view;
 
+    /**
+     * Эта модель пригодится в нескольких методах.
+     *
+     * @var shopMlmCustomersModel
+     */
+    private $MlmCustomers;
+
+    public function __construct($info)
+    {
+        parent::__construct($info);
+        $this->MlmCustomers = new shopMlmCustomersModel();
+    }
+
     private static function getView()
     {
         if (!empty(self::$view)) {
@@ -205,9 +218,18 @@ class shopMlmPlugin extends shopPlugin
         if (!$this->getSettings('enabled')) {
             return;
         }
+
+        // Без жнецов плагин не работает
+        $owners = $this->getSettings('owners');
+        if(!$owners || empty($owners) || !is_array($owners)) {
+            return;
+        }
+
         $view = self::getView();
         $this->addJs('js/jstree/jstree.min.js');
+        $this->addJs('js/qtip/jquery.qtip.min.js');
         $this->addCss('js/jstree/themes/default/style.min.css');
+        $this->addCss('js/qtip/jquery.qtip.min.css');
 
         $contact = wa()->getUser();
         $contact_id = $contact->getId();
@@ -239,10 +261,106 @@ class shopMlmPlugin extends shopPlugin
 
         $customerClass = new shopMlmPluginCustomer();
 
+        $view->assign('stats', $this->getStats($customer));
         $view->assign('contact', $contact);
         $view->assign('parent', $mlmCustomersModel->getParent($customer));
         $view->assign('subtree', $customerClass->customers($customer['id'], 3));
         $view->assign('promo', $this->getSettings('promo'));
         return $view->fetch($this->path . '/templates/frontendMyAffiliate.html');
     }
+
+    /**
+     * Handler for order_arction.complete Hook
+     *
+     * @param array $data
+     */
+    public function orderActionComplete($data)
+    {
+        $Order = new shopOrderModel();
+        $MlmCustomer = new shopMlmCustomersModel();
+//        $ShopCustomer = new shopCustomerModel(); // здесь суммируются Affiliate Bonuses
+        $AffiliateTransaction = new shopAffiliateTransactionModel(); // Правильный метод добавления стандартных бонусов
+        $order = $Order->getOrder($data['order_id']);
+        $bonuses = $this->calculateBonus($order);
+        $buyer = new shopCustomer($order["contact_id"]);
+
+        foreach($MlmCustomer->getThreeParents($order["contact_id"]) as $level => $mlm_customer) {
+
+            $AffiliateTransaction->applyBonus(
+                    $mlm_customer['contact_id'],
+                    $bonuses[$level]['bonus'],
+                    $order['id'],
+                    sprintf(
+                            _wp("Bonus for MLM customer %s's order %s"),
+                            $buyer->getName(),
+                            shopHelper::encodeOrderId($order['id'])),
+                    'mlm_bonus');
+        }
+
+    }
+
+    /**
+     * Возвращает массив с посчитанными бонусами для каждого из трех уровней
+     * [
+     *   1 => [bonus => xxx]
+     *   2 => [bonus => yyy]
+     *   3 => [bonus => zzz]
+     * ]
+     *
+     * Цифра уровень, указывающий на массив, в массиве ключ bonus указывает на
+     * количество бонусов
+     *
+     * @param array $order
+     * @return array
+     */
+    private function calculateBonus($order)
+    {
+        $settings = array(
+            'level_1_percent' => 0,
+            'level_2_percent' => 0,
+            'level_3_percent' => 0,
+        );
+
+        $result = array(
+            1=>array('bonus'=>0),
+            2=>array('bonus'=>0),
+            3=>array('bonus'=>0),
+        );
+
+        foreach($settings as $key => $value) {
+            $settings[$key] = $this->getSettings($key) ? $this->getSettings($key) : $value;
+        }
+
+        for($i = 1; $i <= 3; $i++) {
+            $result[$i]['bonus'] = shopAffiliate::calculateBonus($order['id'], 100/$settings["level_{$i}_percent"]);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Возвращает массив со статистикой для каждого уровня реферралов
+     * указанного контакта
+     *
+     * @param array $customer Массив данных о нашем пользователе из модели shopMlmCustomersModel
+     * @return array Массив с тремя вложенными массивами со статистикой, по одному на каждый уровень
+     */
+    private function getStats($customer)
+    {
+        $result = array();
+
+        for($level = 1; $level<=3; $level++) {
+            $result[$level] = array(
+                'percent' => ($this->getSettings("level_{$level}_percent") ? $this->getSettings("level_{$level}_percent") : 0),
+                'referral_count' => $this->MlmCustomers->countReferrals($customer, $level),
+                'purchases_total' => $this->MlmCustomers->countReferralPurchasesTotals($customer, $level),
+                'bonuses_total' => 0, // Пока рассчитывается в шаблоне простым умножением и делением
+                'missed_bonuses_total' => 0,
+                'reasons' => array()
+            );
+        }
+
+        return $result;
+    }
+
 }
