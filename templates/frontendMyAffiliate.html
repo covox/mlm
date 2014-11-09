@@ -3,6 +3,7 @@
 {if !empty($code)}
 
     <!-- referral -->
+    <p>[`Promo code`]: <b>{$code}</b></p>
     <p>[`Sign Up mlm user URL`]: <a href="{$wa->getUrl('shop/frontend', true)}mlm/signup/?mlm_id={$code}" class="highlighted referral-url">{$wa->getUrl('shop/frontend', true)}<strong>mlm/signup/?mlm_id={$code}</strong></a></p>
     {if isset($parent)}
         <p>
