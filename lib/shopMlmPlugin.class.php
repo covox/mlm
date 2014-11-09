@@ -236,7 +236,7 @@ class shopMlmPlugin extends shopPlugin
         $mlmCustomersModel = new shopMlmCustomersModel();
         $customer = $mlmCustomersModel->getByContactId($contact_id);
 
-
+        $this->MlmCustomers->adoptOrphans();
 
         if (!$customer) {
             $customer = array(

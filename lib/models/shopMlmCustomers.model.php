@@ -490,6 +490,27 @@ class shopMlmCustomersModel extends waNestedSetModel
 
         return $result ? (float)$result : 0;
     }
+    
+    /**
+     * Выбираем контакты у которых есть в профиле партнерский код, но которые
+     * не принадлежат никому. Добавляем их тем, с чьим кодом они пришли
+     */
+    public function adoptOrphans()
+    {
+        $orphans = $this->query("SELECT wcd.contact_id as contact_id, `wcd`.`value` as `code` "
+                . "FROM `wa_contact_data` wcd LEFT JOIN {$this->table} smc "
+                . "ON smc.contact_id=wcd.contact_id "
+                . "WHERE wcd.field=s:field_name "
+                . "AND ISNULL(smc.id)", array(
+                    'field_name' => shopMlmPlugin::MLM_PROMO_CODE_CONTACTFIELD
+                ));
+                
+        if($orphans->count()) { // Кто-то попался
+            foreach($orphans as $orphan) {
+                $this->add($orphan['contact_id'], $orphan['code']);
+            }
+        }
+    }
 
     /**
      * Добавляет указанный бонус контакту
