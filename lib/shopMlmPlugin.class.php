@@ -312,7 +312,7 @@ class shopMlmPlugin extends shopPlugin
     {
         $user = waSystem::getInstance()->getUser();
         $mlm_id = waRequest::get('mlm_id', NULL, waRequest::TYPE_STRING_TRIM);
-        
+
         $view = $this->getView();
 
         if(!$user->isAuth() && $mlm_id && !waSystem::getInstance()->getStorage()->read('mlm_id')) { //такая переменная есть в GET, а сессии нет
@@ -320,7 +320,7 @@ class shopMlmPlugin extends shopPlugin
         }
 
         $mlm_id = waSystem::getInstance()->getStorage()->read('mlm_id');
-        
+
         if($mlm_id) {
             $view->assign('field_id', self::MLM_PROMO_CODE_CONTACTFIELD);
             $view->assign('mlm_id', $mlm_id);
@@ -346,24 +346,15 @@ class shopMlmPlugin extends shopPlugin
      */
     private function calculateBonus($order)
     {
-        $settings = array(
-            'level_1_percent' => 0,
-            'level_2_percent' => 0,
-            'level_3_percent' => 0,
-        );
-
         $result = array(
             1=>array('bonus'=>0),
             2=>array('bonus'=>0),
             3=>array('bonus'=>0),
         );
 
-        foreach($settings as $key => $value) {
-            $settings[$key] = $this->getSettings($key) ? $this->getSettings($key) : $value;
-        }
-
         for($i = 1; $i <= 3; $i++) {
-            $result[$i]['bonus'] = shopAffiliate::calculateBonus($order['id'], 100/$settings["level_{$i}_percent"]);
+            $percent = $this->getPercentByLevel($i);
+            $result[$i]['bonus'] = $i > 0 ? shopAffiliate::calculateBonus($order['id'], 100/$percent) : 0;
         }
 
         return $result;
@@ -382,7 +373,7 @@ class shopMlmPlugin extends shopPlugin
 
         for($level = 1; $level<=3; $level++) {
             $result[$level] = array(
-                'percent' => ($this->getSettings("level_{$level}_percent") ? $this->getSettings("level_{$level}_percent") : 0),
+                'percent' => $this->getPercentByLevel($level),
                 'referral_count' => $this->MlmCustomers->countReferrals($customer, $level),
                 'purchases_total' => $this->MlmCustomers->countReferralPurchasesTotals($customer, $level),
                 'bonuses_total' => 0, // Пока рассчитывается в шаблоне простым умножением и делением
@@ -392,6 +383,23 @@ class shopMlmPlugin extends shopPlugin
         }
 
         return $result;
+    }
+
+    /**
+     * Возвращает процент начисления бонусов для указанного уровня
+     *
+     * @param int $level Уровень
+     * @return float
+     */
+    private function getPercentByLevel($level)
+    {
+        $percent =  $this->getSettings("level_{$level}_percent");
+
+        if(!$percent) {
+            return 0.0;
+        }
+
+        return floatval($percent);
     }
 
 }
