@@ -40,7 +40,7 @@
                     <tr>
                         <td>{$level}</td>
                         <td>{$data.referral_count}</td>
-                        <td>{$data.purchases_total}</td>
+                        <td>{wa_currency_html($data.purchases_total, 'RUB')}</td>
                         <td>{$data.percent}</td>
                         <td>{$data.bonuses_total}</td>
                         <td>{$data.missed_bonuses_total}</td>

@@ -444,7 +444,6 @@ class shopMlmCustomersModel extends waNestedSetModel
             return 0;
         }
 
-
         $result = $this->select("COUNT(*) as cnt")->
                 where("left_key > i:lft AND right_key < i:rght AND depth=i:depth", array(
                     'lft' => $customer['left_key'],
@@ -454,6 +453,78 @@ class shopMlmCustomersModel extends waNestedSetModel
                 fetchField();
 
         return $result;
+    }
+
+    /**
+     * Считает сумму по выполненным заказам для реферралов $level уровня.
+     *
+     * @todo Необходимо вести собственный учет сумм, статус заказов может быть изменен на отмену и прочее, а начисления уже не изменятся
+     *
+     * @deprecated since version 0.0.1
+     *
+     * @param int|array $customer ID записи из этой модели (int) или массив с данными о контакте из этой модели (array)
+     * @param int $level Уровень
+     * @return float Сумма по выполненным заказам
+     */
+    public function countReferralPurchasesTotals($customer, $level)
+    {
+        if(!is_array($customer)) {
+            $customer = $this->getById($customer);
+        }
+
+        if(empty($customer)) {
+            return 0;
+        }
+
+        $result = $this->query("SELECT SUM(so.total-so.tax-so.shipping) as `purchases` "
+                . "FROM `{$this->table}` `smc` "
+                . "LEFT JOIN `shop_order` `so` ON `smc`.`contact_id`=`so`.`contact_id` "
+                . "WHERE smc.left_key > i:lft "
+                . "AND smc.right_key < i:rght "
+                . "AND smc.depth = i:depth "
+                . "AND so.state_id='completed'", array(
+                    'lft' => $customer['left_key'],
+                    'rght' => $customer['right_key'],
+                    'depth' => $customer['depth']+$level
+                ))->fetchField();
+
+        return $result ? (float)$result : 0;
+    }
+
+    /**
+     * Считает сумму по начисленных бонусов в рамках программы MLM для
+     * реферралов $level уровня. Суммирует все начисления для реффералов из
+     * общесистемного лога. В сумму входят именно начисления в рамках
+     * партнерской программы, а не начисления за сделанные заказы.
+     *
+     * Возможно это не то, что хочет клиент, но какие-то цифры считает
+     *
+     * @param int|array $customer ID записи из этой модели (int) или массив с данными о контакте из этой модели (array)
+     * @param int $level Уровень
+     * @return float Сумма начислений
+     */
+    public function countReferralAccrualSum($customer, $level)
+    {
+        if(!is_array($customer)) {
+            $customer = $this->getById($customer);
+        }
+
+        if(empty($customer)) {
+            return 0;
+        }
+
+        $result = $this->query("SELECT SUM(sat.amount) amount "
+                . "FROM {$this->table} smc "
+                . "LEFT JOIN shop_affiliate_transaction sat ON sat.contact_id=smc.contact_id "
+                . "WHERE smc.left_key > i:lft "
+                . "AND smc.right_key < i:rght "
+                . "AND smc.depth = i:depth", array(
+                    'lft' => $customer['left_key'],
+                    'rght' => $customer['right_key'],
+                    'depth' => $customer['depth']+$level
+                ))->fetchField();
+
+        return $result ? (float)$result : 0;
     }
 
     /**
