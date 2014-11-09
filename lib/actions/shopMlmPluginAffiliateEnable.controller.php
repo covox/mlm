@@ -10,10 +10,9 @@ class shopMlmPluginAffiliateEnableController extends waJsonController
 
         $app_settings_model = new waAppSettingsModel();
 
-        $this->setPromoCodeFieldInSignupForm(1);
-
         if($type == 'onoff') {
             $app_settings_model->set(array('shop', 'mlm'), 'enabled', $enabled);
+            $this->setPromoCodeFieldInSignupForm($enabled ? 1 : 0);
         } elseif($type == 'probability') {
             $app_settings_model->set(array('shop', 'mlm'), 'probability', $enabled);
         }
