@@ -9,7 +9,7 @@ return array (
     'handlers' =>
         array (
             'backend_settings_affiliate' => 'backendSettingsAffiliate',
-            'fronted_head' => 'frontendHead',
+            'frontend_head' => 'frontendHead',
             'frontend_my_affiliate' => 'frontendMyAffiliate',
             'order_action.complete' => 'orderActionComplete',
         ),
