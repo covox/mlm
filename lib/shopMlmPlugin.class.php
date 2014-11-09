@@ -280,7 +280,6 @@ class shopMlmPlugin extends shopPlugin
     public function orderActionComplete($data)
     {
         $Order = new shopOrderModel();
-//        $ShopCustomer = new shopCustomerModel(); // здесь суммируются Affiliate Bonuses
         $AffiliateTransaction = new shopAffiliateTransactionModel(); // Правильный метод добавления стандартных бонусов
         $order = $Order->getOrder($data['order_id']);
         $bonuses = $this->calculateBonus($order);
@@ -307,7 +306,7 @@ class shopMlmPlugin extends shopPlugin
      * несколько разных партнерских ссылок, то он все равно будет к первому
      * привязан
      *
-     * @return string Возвращаем пустую строку потому, что реально мы ничего в head не добавляем
+     * @return string
      */
     public function frontendHead()
     {
