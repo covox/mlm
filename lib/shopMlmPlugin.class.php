@@ -354,7 +354,7 @@ class shopMlmPlugin extends shopPlugin
 
         for($i = 1; $i <= 3; $i++) {
             $percent = $this->getPercentByLevel($i);
-            $result[$i]['bonus'] = $i > 0 ? shopAffiliate::calculateBonus($order['id'], 100/$percent) : 0;
+            $result[$i]['bonus'] = $percent > 0 ? shopAffiliate::calculateBonus($order['id'], 100/$percent) : 0;
         }
 
         return $result;
