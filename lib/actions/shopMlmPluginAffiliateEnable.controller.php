@@ -52,7 +52,7 @@ class shopMlmPluginAffiliateEnableController extends waJsonController
             }
         }
 
-        if (!$this->getConfig()->setAuth($config)) {
+        if (!$this->getConfig()->setAuth($auth_config)) {
             $this->errors = sprintf(_w('File could not be saved due to the insufficient file write permissions for the "%s" folder.'), 'wa-config/');
         }
 
