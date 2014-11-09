@@ -233,8 +233,7 @@ class shopMlmPlugin extends shopPlugin
 
         $contact = wa()->getUser();
         $contact_id = $contact->getId();
-        $mlmCustomersModel = new shopMlmCustomersModel();
-        $customer = $mlmCustomersModel->getByContactId($contact_id);
+        $customer = $this->MlmCustomers->getByContactId($contact_id);
 
         $this->MlmCustomers->adoptOrphans();
 
@@ -244,7 +243,7 @@ class shopMlmPlugin extends shopPlugin
             );
 
             $parent_code = waRequest::get('mlm_id', 0, 'int');
-            $customer['code'] = $mlmCustomersModel->add($contact_id, $parent_code);
+            $customer['code'] = $this->MlmCustomers->add($contact_id, $parent_code);
         }
 
         if ($customer) {
@@ -263,7 +262,7 @@ class shopMlmPlugin extends shopPlugin
 
         $view->assign('stats', $this->getStats($customer));
         $view->assign('contact', $contact);
-        $view->assign('parent', $mlmCustomersModel->getParent($customer));
+        $view->assign('parent', $this->MlmCustomers->getParent($customer));
         $view->assign('subtree', $customerClass->customers($customer['id'], 3));
         $view->assign('promo', $this->getSettings('promo'));
         return $view->fetch($this->path . '/templates/frontendMyAffiliate.html');
@@ -277,14 +276,13 @@ class shopMlmPlugin extends shopPlugin
     public function orderActionComplete($data)
     {
         $Order = new shopOrderModel();
-        $MlmCustomer = new shopMlmCustomersModel();
 //        $ShopCustomer = new shopCustomerModel(); // здесь суммируются Affiliate Bonuses
         $AffiliateTransaction = new shopAffiliateTransactionModel(); // Правильный метод добавления стандартных бонусов
         $order = $Order->getOrder($data['order_id']);
         $bonuses = $this->calculateBonus($order);
         $buyer = new shopCustomer($order["contact_id"]);
 
-        foreach($MlmCustomer->getThreeParents($order["contact_id"]) as $level => $mlm_customer) {
+        foreach($this->MlmCustomers->getThreeParents($order["contact_id"]) as $level => $mlm_customer) {
 
             $AffiliateTransaction->applyBonus(
                     $mlm_customer['contact_id'],
