@@ -298,6 +298,27 @@ class shopMlmPlugin extends shopPlugin
     }
 
     /**
+     * Получаем GET-переменную mlm_id и, если ее еще нет в сессии и пользователь
+     * не аутентифицирован, сохраняем в сессию
+     *
+     * @return string Возвращаем пустую строку потому, что реально мы ничего в head не добавляем
+     */
+    public function frontendHead()
+    {
+        if(waSystem::getInstance()->getUser()) { // это залогиненый пользователь, нам от него ничего не надо
+            return "";
+        }
+
+        $mlm_id = waRequest::get('mlm_id', NULL, waRequest::TYPE_STRING_TRIM);
+
+        if($mlm_id && !waSystem::getInstance()->getStorage()->read('mlm_id')) { //такая переменная есть в GET, а сессии нет
+            waSystem::getInstance()->getStorage()->write('mlm_id', $mlm_id);
+        }
+
+        return "";
+    }
+
+    /**
      * Возвращает массив с посчитанными бонусами для каждого из трех уровней
      * [
      *   1 => [bonus => xxx]
