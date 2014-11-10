@@ -223,6 +223,10 @@ class shopMlmPlugin extends shopPlugin
             return;
         }
 
+        if (waRequest::get('terms')) {
+
+        }
+
         // Без жнецов плагин не работает
         $owners = $this->getSettings('owners');
         if(!$owners || empty($owners) || !is_array($owners)) {
