@@ -37,6 +37,15 @@ class shopMlmPluginFrontendTermsAction extends shopFrontendAction
             return;
         }
 
+
+        $mlmCustomersModel = new shopMlmCustomersModel();
+
+        $customer = $mlmCustomersModel->getByContactId($user->getId());
+
+        if ($customer) {
+            $this->view->assign('parent', $mlmCustomersModel->getParent($customer));
+        }
+
         $this->view->assign('terms', $settings['terms']);
         $this->setLayout(new shopFrontendLayout());
         $this->getResponse()->setTitle(_wp('MLM terms'));
