@@ -247,7 +247,8 @@ class shopMlmPlugin extends shopPlugin
             );
 
             $parent_code = waRequest::get('mlm_id', 0, 'int');
-            $customer['code'] = $this->MlmCustomers->add($contact_id, $parent_code);
+            $code = $this->MlmCustomers->add($contact_id, $parent_code);
+            $customer = $this->MlmCustomers->getByCode($code);
         }
 
         if ($customer) {
@@ -261,6 +262,8 @@ class shopMlmPlugin extends shopPlugin
             $view->assign('date_format', $format);
             $view->assign('activity', $this->getSettings('activity'));
         }
+
+
 
         $customerClass = new shopMlmPluginCustomer();
 
