@@ -223,9 +223,7 @@ class shopMlmPlugin extends shopPlugin
             return;
         }
 
-        if (waRequest::get('terms')) {
 
-        }
 
         // Без жнецов плагин не работает
         $owners = $this->getSettings('owners');
@@ -245,7 +243,9 @@ class shopMlmPlugin extends shopPlugin
 
         $this->MlmCustomers->adoptOrphans();
 
-        if (!$customer) {
+        if (!$customer && waRequest::post('terms_accept')) {
+
+
             $customer = array(
                 'contact_id' => $contact_id
             );
@@ -253,6 +253,10 @@ class shopMlmPlugin extends shopPlugin
             $parent_code = waRequest::get('mlm_id', 0, 'int');
             $code = $this->MlmCustomers->add($contact_id, $parent_code);
             $customer = $this->MlmCustomers->getByCode($code);
+        }
+        elseif (!$customer && !waRequest::post('terms_accept')) {
+            wa()->getResponse()->redirect(array('url' => wa()->getRouteUrl('shop/frontend') . 'mlm/terms/'));
+            $this->redirect(array('url' => '/'));
         }
 
         if ($customer) {

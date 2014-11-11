@@ -45,6 +45,7 @@ class shopMlmPluginFrontendTermsAction extends shopFrontendAction
             $this->view->assign('parent', $mlmCustomersModel->getParent($customer));
         }
 
+        $this->view->assign('affiliate_url', wa()->getRouteUrl('shop/frontend/my') . 'affiliate/');
         $this->view->assign('terms', $settings['terms']);
         $this->setLayout(new shopFrontendLayout());
         $this->getResponse()->setTitle(_wp('MLM terms'));
