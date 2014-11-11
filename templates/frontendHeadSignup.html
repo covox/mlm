@@ -1,4 +1,5 @@
-{if waRequest::param('module') == 'signup' AND empty(waRequest::param('action'))}
+{$action = waRequest::param('action')}
+{if waRequest::param('module') == 'signup' AND empty($action)}
 <script type="text/javascript">
     $(function(){
         $("input[name='data[{$field_id}]']").closest("div.wa-field").hide();
