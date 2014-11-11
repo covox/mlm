@@ -241,8 +241,6 @@ class shopMlmPlugin extends shopPlugin
         $contact_id = $contact->getId();
         $customer = $this->MlmCustomers->getByContactId($contact_id);
 
-        $this->MlmCustomers->adoptOrphans();
-
         if (!$customer && waRequest::post('terms_accept')) {
 
 
