@@ -37,7 +37,6 @@ class shopMlmPluginFrontendTermsAction extends shopFrontendAction
             return;
         }
 
-
         $mlmCustomersModel = new shopMlmCustomersModel();
 
         $customer = $mlmCustomersModel->getByContactId($user->getId());

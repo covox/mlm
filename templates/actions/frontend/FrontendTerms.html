@@ -4,4 +4,19 @@
         [`Recommendation from:&nbsp;`]{$parent.name}
     </p>
 {/if}
-{$terms}
+<p>
+    {$terms}
+</p>
+
+<p>
+<form>
+    [`MLM Code:`]<br />
+    {if isset($parent)}
+        <input type="text" name="mlm_code" value="{$parent.code}" disabled /><br />
+    {else}
+        <input type="text" name="mlm_code" value="" /><br />
+    {/if}
+    <input type="submit" name="terms_accept" value="[`Agree and accept`]">
+    <input type="submit" name="no_accept" value="[`No accept`]">
+</form>
+</p>
