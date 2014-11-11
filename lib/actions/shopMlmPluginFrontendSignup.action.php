@@ -112,6 +112,6 @@ class shopMlmPluginFrontendSignupAction extends waSignupAction
             }
         }
 
-
     }
 }
+
