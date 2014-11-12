@@ -37,7 +37,15 @@ class shopMlmPluginFrontendTermsAction extends shopFrontendAction
             return;
         }
 
-        $this->view->assign('parent', $user->get(shopMlmPlugin::MLM_PROMO_CODE_CONTACTFIELD));
+        $mlmCustomersModel = new shopMlmCustomersModel();
+        
+        $parent_customer = $mlmCustomersModel->getByCode($user->get(shopMlmPlugin::MLM_PROMO_CODE_CONTACTFIELD));
+        
+        if($parent_customer) {
+            $this->view->assign('parent', $mlmCustomersModel->getContact($parent_customer));
+        }
+        
+        $this->view->assign('code', $user->get(shopMlmPlugin::MLM_PROMO_CODE_CONTACTFIELD));
 
         $this->view->assign('affiliate_url', wa()->getRouteUrl('shop/frontend/my') . 'affiliate/');
         $this->view->assign('terms', $settings['terms']);
