@@ -37,13 +37,7 @@ class shopMlmPluginFrontendTermsAction extends shopFrontendAction
             return;
         }
 
-        $mlmCustomersModel = new shopMlmCustomersModel();
-
-        $customer = $mlmCustomersModel->getByContactId($user->getId());
-
-        if ($customer) {
-            $this->view->assign('parent', $mlmCustomersModel->getParent($customer));
-        }
+        $this->view->assign('parent', $user->get(shopMlmPlugin::MLM_PROMO_CODE_CONTACTFIELD));
 
         $this->view->assign('affiliate_url', wa()->getRouteUrl('shop/frontend/my') . 'affiliate/');
         $this->view->assign('terms', $settings['terms']);
