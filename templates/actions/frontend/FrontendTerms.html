@@ -12,9 +12,9 @@
 <form method="post" action="{$affiliate_url}">
     [`MLM Code:`]<br />
     {if isset($parent)}
-        <input type="text" name="mlm_code" value="{$code}" disabled /><br />
+        <input type="text" name="mlm_code" value="{$code}" readonly ><br>
     {else}
-        <input type="text" name="mlm_code" value="" /><br />
+        <input type="text" name="mlm_code" value=""><br>
     {/if}
     <input type="submit" name="terms_accept" value="[`Agree and accept`]">
     <input type="submit" name="no_accept" value="[`No accept`]">
