@@ -460,8 +460,6 @@ class shopMlmCustomersModel extends waNestedSetModel
      *
      * @todo Необходимо вести собственный учет сумм, статус заказов может быть изменен на отмену и прочее, а начисления уже не изменятся
      *
-     * @deprecated since version 0.0.1
-     *
      * @param int|array $customer ID записи из этой модели (int) или массив с данными о контакте из этой модели (array)
      * @param int $level Уровень
      * @return float Сумма по выполненным заказам
