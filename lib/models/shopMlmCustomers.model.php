@@ -403,29 +403,6 @@ class shopMlmCustomersModel extends waNestedSetModel
     }
 
     /**
-     * Добавляет бонусы "родителям" контакта. До трех уровней.
-     * Уровень 1 — прямой родитель
-     * Уровень 2 — родитель родителя (дедушка :) )
-     * Уровень 3 — родитель родителя родителя (прадедушка-бугор :) )
-     *
-     * @todo Если сумму бонусов считаем в модели shopCustomerModel, то этот метод удалить
-     *
-     * @see shopMlmPlugin::calculateBonus() Структура массива с бонусами
-     *
-     * @param int $contact_id
-     * @param array $bonus
-     */
-    public function addBonusToParents($contact_id, $bonus)
-    {
-        $customer = $this->getByContactId($contact_id);
-
-        for($level=1; $level <= 3 && !empty($customer) && $customer["parent_id"]; $level++) {
-            $customer = $this->getById($customer["parent_id"]);
-            $this->addBonus($customer["id"], $bonus[$level]["bonus"]);
-        }
-    }
-
-    /**
      * Подсчитывает количество реферралов для указанного контакта на заданном
      * уровне. Уровень в принципе может быть любым, но сейчас мы используем
      * от 1 до 3
