@@ -1,5 +1,4 @@
 <?php
 return array (
-    'mlm/signup/' => 'frontend/signup',
-    'mlm/terms/' => 'frontend/terms',
+    'mlm/terms/' => 'fron1tend/terms',
 );
